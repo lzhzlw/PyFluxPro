@@ -398,7 +398,7 @@ def csv_read_parse_cf(cf):
     # define the missing values and the value with which to fill them
     info["missing_values"] = "NA,N/A,NAN,NaN,nan,#NAME?,#VALUE!,#DIV/0!,#REF!,Infinity,-Infinity"
     info["filling_values"] = c.missing_value
-    info["deletechars"] = set("""~!@#$%^&=+~\|]}[{';: ?.>,<""")
+    info["deletechars"] = set("""~!@#$%^&=+~|]}[{';: ?.>,<""")
 
     info["cf_ok"] = True
 
@@ -813,7 +813,7 @@ def ReadExcelWorkbook(l1_info):
                 nc_label = l1ire["xl_sheets"][xl_sheet]["xl_labels"][xl_label]
                 del l1ire["xl_sheets"][xl_sheet]["xl_labels"][xl_label]
                 del l1ire["xl_sheets"][xl_sheet]["nc_labels"][nc_label]
-    df_names = list(dfs)
+    df_names = sorted(list(dfs))
     for df_name in df_names:
         # get the column name of the timestamp
         timestamp = read_excel_workbook_get_timestamp(dfs, df_name, l1_info)
@@ -834,20 +834,13 @@ def ReadExcelWorkbook(l1_info):
         dfs[df_name].index = dfs[df_name].index.round('1S')
         # drop columns except those wanted by the user
         dfs[df_name] = dfs[df_name][~dfs[df_name].index.duplicated(keep='first')]
-        ## check the time step of this worksheet against the value in the global attributes
-        #pdts = pandas.infer_freq(dfs[df_name].index)
-        #pdts = pfp_utils.strip_non_numeric(pdts)
-        #gats = l1ire["Global"]["time_step"]
-        #if int(pdts) != int(gats):
-            #msg = " " + df_name + " time step is " + pdts + ", expected " + gats
-            #logger.error(msg)
-            #continue
         # drop columns except those wanted by the user
         dfs[df_name] = dfs[df_name][list(l1ire["xl_sheets"][df_name]["xl_labels"])]
         # coerce all columns with dtype "object" to "float64"
         cols = dfs[df_name].columns[dfs[df_name].dtypes.eq(object)]
         dfs[df_name][cols] = dfs[df_name][cols].apply(pandas.to_numeric, errors='coerce')
     # check to see if we have anything left to work with
+    df_names = sorted(list(dfs))
     if len(df_names) < 1:
         msg = " No sheets to process in workbook " + l1ire["Files"]["in_filename"]
         logger.error(msg)
@@ -870,20 +863,55 @@ def ReadExcelWorkbook(l1_info):
     return dfs
 
 def read_excel_workbook_get_timestamp(dfs, df_name, l1_info):
+    """
+    Purpose:
+     Check to see if we can get a timestamp for this worksheet.
+     The criteria for accepting a worksheet column as a timestamp are:
+      - pandas must be able to convert it to a datetime
+      - the time step must be the same as the global attribute
+        time step
+        - the time step is calculated as the mode of the differentiated
+          timestamp column
+      - if there are more than 1 columns that qualify, the first is chosen
+    Usage:
+    Side effects:
+     The worksheet is deleted from the dictionary of data frames, dfs, if
+     no timestamp is found.
+    Author: PRI
+    Date: Back in the day
+    """
+    # get the global attribute time step
+    ts = int(l1_info["read_excel"]["Global"]["time_step"])
+    # get the data frame for this worksheet
     df = dfs[df_name]
+    # initialise logicals
     got_timestamp = False
     more_than_one = False
+    # first check for columns that qualify
     if not got_timestamp:
+        # get a list of columns where dtype is datetime64
         dt_columns = [c for c in df.columns if pandas.api.types.is_datetime64_dtype(df[c])]
+        # check to see if there is more than 1
         if len(dt_columns) > 1:
             more_than_one = True
+        # loop over candidate columns
         for dt_column in dt_columns:
+            # try casting column as datetime
             try:
                 df[dt_column] = pandas.to_datetime(df[dt_column])
-                timestamp = dt_column
-                got_timestamp = True
-                break
-            except (ParserError, ValueError):
+                # get the time step for this column
+                df_ts = df[dt_column].diff()
+                # get the mode of the time step as minutes
+                df_ts = df_ts.mode().values[0].astype('timedelta64[m]').astype(int)
+                # is the data frame time step the same as the global attribute time step?
+                if df_ts == ts:
+                    # if yes then we have the timestamp column for this data frame
+                    timestamp = dt_column
+                    got_timestamp = True
+                    # and exit the for loop
+                    break
+            except (ParserError, TypeError, ValueError):
+                # pass silently on these errors
                 pass
     if not got_timestamp:
         obj_columns = [c for c in df.columns[df.dtypes=='object']]
@@ -892,20 +920,35 @@ def read_excel_workbook_get_timestamp(dfs, df_name, l1_info):
         for obj_column in obj_columns:
             try:
                 df[obj_column] = pandas.to_datetime(df[obj_column])
-                timestamp = obj_column
-                got_timestamp = True
-                break
-            except (ParserError,ValueError):
+                # get the time step for this column
+                df_ts = df[obj_column].diff()
+                # get the mode of the time step as minutes
+                df_ts = df_ts.mode().values[0].astype('timedelta64[m]').astype(int)
+                # is the data frame time step the same as the global attribute time step?
+                if df_ts == ts:
+                    # if yes then we have the timestamp column for this data frame
+                    timestamp = obj_column
+                    got_timestamp = True
+                    # and exit the for loop
+                    break
+            except (ParserError, TypeError, ValueError):
                 pass
+    # check to see if we have a timestamp for this sheet
     if got_timestamp:
         if more_than_one:
-            msg = " Using " + timestamp + " as the timestamp for sheet " + df_name
+            # if there was more than 1 timestamp, tell the user which one we are using
+            msg = " Using column " + timestamp + " as the timestamp for sheet " + df_name
             logger.info(msg)
     else:
-        msg = " Unable to find a timestamp for " + df_name + ", deleting ..."
+        # tell the user we couldn't find a timestamp for this sheet
+        msg = "!!!!! Unable to find a timestamp for " + df_name + ", deleting sheet ..."
+        logger.error("!!!!!")
         logger.error(msg)
+        logger.error("!!!!!")
+        # delete the sheet
         del dfs[df_name]
         del l1_info["read_excel"]["xl_sheets"][df_name]
+        # set the timestamp to None
         timestamp = None
     return timestamp
 
@@ -3317,10 +3360,12 @@ def xl_write_AlternateStats(ds, l4_info):
     xlfile.save(l4a["info"]["xl_file_name"])
 
 def xl_write_SOLOStats(ds, l5_info):
-    if "solo" not in list(l5_info.keys()):
+    if "GapFillUsingSOLO" not in list(l5_info.keys()):
         return
+    # local pointer to l5_info outputs
+    l5io = l5_info["GapFillUsingSOLO"]["outputs"]
     # get the output file name
-    out_filename = get_outfilenamefromcf(l5_info["cf"])
+    out_filename = get_outfilenamefromcf(l5_info["cfg"])
     # get the Excel file name
     xl_filename = out_filename.replace('.nc', '_SOLOStats.xls')
     xl_name = os.path.split(xl_filename)
@@ -3331,11 +3376,11 @@ def xl_write_SOLOStats(ds, l5_info):
     date_list = ["startdate", "enddate"]
     # loop over the series that have been gap filled using ACCESS data
     d_xf = xlwt.easyxf(num_format_str='dd/mm/yyyy hh:mm')
-    outputs = list(l5_info["solo"]["outputs"].keys())
+    outputs = list(l5io.keys())
     outputs.sort()
     for output in outputs:
         # get the list of values to output with the start and end dates removed
-        stats = list(l5_info["solo"]["outputs"][output]["results"].keys())
+        stats = list(l5io[output]["results"].keys())
         for item in date_list:
             if item in outputs:
                 outputs.remove(item)
@@ -3345,7 +3390,7 @@ def xl_write_SOLOStats(ds, l5_info):
         xlCol = 0
         for dt in date_list:
             xlResultsSheet.write(xlRow, xlCol, dt)
-            for item in l5_info["solo"]["outputs"][output]["results"][dt]:
+            for item in l5io[output]["results"][dt]:
                 xlRow = xlRow + 1
                 xlResultsSheet.write(xlRow, xlCol, item, d_xf)
             xlRow = 10
@@ -3355,8 +3400,7 @@ def xl_write_SOLOStats(ds, l5_info):
         for stat in stats:
             xlResultsSheet.write(xlRow, xlCol, stat)
             # convert masked array to ndarray
-            output_array = numpy.ma.filled(l5_info["solo"]["outputs"][output]["results"][stat],
-                                           float(c.missing_value))
+            output_array = numpy.ma.filled(l5io[output]["results"][stat], float(c.missing_value))
             for item in output_array:
                 xlRow = xlRow + 1
                 # xlwt under Anaconda seems to only allow float64!

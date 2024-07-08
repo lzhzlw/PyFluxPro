@@ -321,13 +321,24 @@ def CPD_run(cf):
         var = pfp_utils.GetVariable(ds, names[item])
         d[item] = np.ma.filled(var["Data"], np.nan)
         f[item] = var["Flag"]
-    # set all data to NaNs if any flag not 0 or 10
+    # set data to NaNs if target (Fco2) flag is not 0 or driver (Fsd, ustar, Ta)
+    # flag does not end in 0 (i.e. allow gap filled drivers but only observed target)
+    # create a conditional index, 0 will be OK, 1 will be not OK
+    cidx = np.zeros(len(dt))
+    # loop over items in the flag dictionary
     for item in list(f.keys()):
-        for f_OK in [0, 10]:
+        # check to see if we are using the target ...
+        if item == "Fco2":
+            # target must have a flag == 0 i.e. an observation
             idx = np.where(f[item] != 0)[0]
-            if len(idx) != 0:
-                for itemd in list(d.keys()):
-                    d[itemd][idx] = np.nan
+            cidx[idx] = 1
+        else:
+            # drivers must have a flag that ends in 0 i.e. can be gap filled
+            idx = np.where(np.mod(f[item], 10) != 0)[0]
+            cidx[idx] = 1
+    # loop over the data dictionary and set rejected data to NaN
+    for item in list(d.keys()):
+        d[item][cidx == 1] = np.nan
     d["Year"] = np.array([ldt.year for ldt in dt])
     df = pd.DataFrame(d, index=dt)
     # replace missing values with NaN

@@ -64,7 +64,7 @@ def cpd_barr_main(cf):
     if ds.info["returncodes"]["value"] != 0: return
     # get the single-point storage, Fc_single, if available
     if apply_storage and "Fco2_storage" not in list(ds.root["Variables"].keys()):
-        pfp_ts.CalculateFco2StorageSinglePoint(cf, ds)
+        pfp_ts.CalculateSco2SinglePoint(cf, ds)
         Fco2_single = pfp_utils.GetVariable(ds, "Fco2_single")
         Fco2_single["Label"] = "Fco2_storage"
         pfp_utils.CreateVariable(ds, Fco2_single)

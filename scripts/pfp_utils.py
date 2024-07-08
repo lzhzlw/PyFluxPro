@@ -1096,7 +1096,7 @@ def convert_anglestring(anglestring):
     quadlist = ["N", "E", "S", "W"]
     direction = {'N':1, 'S':-1, 'E': 1, 'W':-1}
     # replace the degrees, minutes and seconds symbols with spaces
-    new = anglestring.replace('\B0', ' ').replace('\'', ' ').replace('"', ' ').strip()
+    new = anglestring.replace(r'\B0', ' ').replace('\'', ' ').replace('"', ' ').strip()
     try:
         # simple casting may work, who knows?
         anglefloat = float(new)
@@ -1956,7 +1956,33 @@ def GetVariable(ds, label, group="root", start=0, end=-1, mode="truncate", out_t
     nrecs = int(float(gattr["nc_nrecs"]))
     ts = gattr["time_step"]
     if ts in ["daily", "monthly", "annual"]:
-        pass
+        # convert datetime to date
+        dt = numpy.array([d.date() for d in dt])
+        # we only handle specific cases of start and end
+        if (isinstance(start, numbers.Number) and isinstance(end, numbers.Number) and
+            end > start):
+            # start and end are both numbers so use them as indices
+            dt = dt[start:end+1]
+            data = data[start:end+1]
+            flag = flag[start:end+1]
+        elif (isinstance(start, str) and isinstance(end, str)):
+            # start and end are both strings
+            start = dateutil.parser.parse(start)
+            end = dateutil.parser.parse(end)
+            if (end > start):
+                idx = numpy.where((dt >= start.date()) & (dt <= end.date()))[0]
+                dt = dt[idx]
+                data = data[idx]
+                flag = flag[idx]
+        elif (isinstance(start, datetime.date) and isinstance(end, datetime.date) and
+              end > start):
+            # start and end are both dates
+            idx = numpy.where((dt >= start.date()) & (dt <= end.date()))[0]
+            dt = dt[idx]
+            data = data[idx]
+            flag = flag[idx]
+        else:
+            pass
     else:
         ts = int(float(ts))
         match_options = {"start": {"exact": "exact",

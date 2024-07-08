@@ -7,6 +7,9 @@
 logfiles/
 utilities/logfiles/
 
+# utilities
+utilities/
+
 # solo files
 solo/bin/sofm
 solo/bin/solo

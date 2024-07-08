@@ -214,12 +214,12 @@ def gfSOLO_done(solo_gui):
     called_by = solo_gui.called_by
     l5s = l5_info[called_by]
     # plot the summary statistics if gap filling was done manually
-    cl = ["GapFillUsingSOLO", "GapFillLongSOLO"]
-    if (l5s["gui"]["period_option"] == 1 and l5s["info"]["called_by"] in cl):
+    if (l5s["info"]["called_by"] in ["GapFillUsingSOLO", "GapFillLongSOLO"]):
         # write Excel spreadsheet with fit statistics
-        pfp_io.xl_write_SOLOStats(ds, l5s)
-        # plot the summary statistics
-        gfSOLO_plotsummary(ds, l5s)
+        pfp_io.xl_write_SOLOStats(ds, l5_info)
+        # close any open plots
+        for i in plt.get_fignums():
+            plt.close(i)
     # destroy the SOLO GUI
     solo_gui.close()
     # set the return codes
@@ -473,7 +473,7 @@ def gfSOLO_plot(pd, ds, drivers, target, output, l5s, si=0, ei=-1):
     # save a hard copy of the plot
     sdt = xdt[0].strftime("%Y%m%d")
     edt = xdt[-1].strftime("%Y%m%d")
-    figname = l5s["info"]["site_name"].replace(" ", "") + "_SOLO_" + target
+    figname = l5s["info"]["site_name"].replace(" ", "") + target
     figname = figname + "_" + sdt + "_" + edt + ".png"
     figname = os.path.join(l5s["info"]["plot_path"], figname)
     fig.savefig(figname, format="png")
@@ -609,7 +609,6 @@ def gfSOLO_plotsummary(ds, solo):
         # and loop over rows in plot
         for row, rlabel, ylabel in zip(list(range(len(result_list))), result_list, ylabel_list):
             # get the results to be plotted
-            #result = numpy.ma.masked_equal(ds.solo[label]["results"][rlabel],float(c.missing_value))
             # put the data into the right order to be plotted
             dt, data = gfSOLO_plotsummary_getdata(dt_start, dt_end, solo["outputs"][label]["results"][rlabel])
             dt = numpy.ma.masked_equal(dt, float(c.missing_value))
@@ -785,7 +784,7 @@ def gfSOLO_run(ds, l5_info, called_by):
         gfSOLO_autocomplete(ds, l5_info, called_by)
         if l5s["info"]["called_by"] in ["GapFillUsingSOLO", "GapFillLongSOLO"]:
             # write Excel spreadsheet with fit statistics
-            pfp_io.xl_write_SOLOStats(ds, l5s)
+            #pfp_io.xl_write_SOLOStats(ds, l5s)
             if l5s["info"]["call_mode"] == "interactive":
                 # plot the summary statistics
                 gfSOLO_plotsummary(ds, l5s)

@@ -254,20 +254,24 @@ class partition(object):
         E0_results = pd.DataFrame.from_dict(self.results["E0"], orient="index")
         E0_results.to_excel(self.xl_writer, "E0 results")
         if len(Eo_list) == 0:
-            msg = "!!!!! Could not find any valid estimates of E0, exiting..."
-            logger.error("!!!!!")
-            logger.error(msg)
-            logger.error("!!!!!")
-            raise RuntimeError(msg)
-        msg = " Found {} valid estimates of Eo (out of {} windows)".format(str(len(Eo_list)), str(n))
-        logger.info(msg)
-        Eo_array = np.array(Eo_list)
-        Eo = ((Eo_array[:, 0] / (Eo_array[:, 1])).sum() /
-              (1 / Eo_array[:, 1]).sum())
-        if not 50 < Eo < 400: raise RuntimeError('Eo value {} outside '
-                                                 'acceptable parameter range '
-                                                 '(50-400)! Exiting...'
-                                                 .format(str(round(Eo, 2))))
+            msg = "***** Could not find any valid estimates of E0, exiting..."
+            logger.warning(msg)
+            # remove this variable from those output in L6 summary
+            del self.l6_info[called_by]["outputs"][output]
+            Eo = None
+        else:
+            msg = " Found {} valid estimates of Eo (out of {} windows)".format(str(len(Eo_list)), str(n))
+            logger.info(msg)
+            Eo_array = np.array(Eo_list)
+            Eo = ((Eo_array[:, 0] / (Eo_array[:, 1])).sum() /
+                  (1 / Eo_array[:, 1]).sum())
+            if not 50 < Eo < 400:
+                # E0 is outside the plausible range
+                msg = "***** E0 value {} outside range (50-400)".format(str(round(Eo, 2)))
+                logger.warning(msg)
+                # remove this variable from those output in L6 summary
+                del self.l6_info[called_by]["outputs"][output]
+                Eo = None
         return Eo
     #--------------------------------------------------------------------------
 
@@ -320,6 +324,9 @@ class partition(object):
         func = self._get_func()[mode]
         if not Eo:
             Eo = self.estimate_Eo()
+        # return if E0 not found
+        if Eo is None:
+            return None
         result_list, date_list = [], []
         #msg = "Processing the following dates ({} mode): ".format(mode)
         msg = " Processing date ranges using {} mode: ".format(mode)
@@ -463,8 +470,8 @@ class partition(object):
         ax.tick_params(axis = 'y', labelsize = 14)
         ax.tick_params(axis = 'x', labelsize = 14)
         ax.set_title(dt.datetime.strftime(date, '%Y-%m-%d'), fontsize = 18)
-        ax.set_xlabel('$Temperature\/(^oC)$', fontsize = 18)
-        ax.set_ylabel('$NEE\/(\mu molC\/m^{-2}\/s^{-1})$', fontsize = 18)
+        ax.set_xlabel('$Temperature (degC)', fontsize = 18)
+        ax.set_ylabel('$NEE (umol/m^2/s)', fontsize = 18)
         labels_dict = {'night': 'Night Eo and rb', 'day': 'Night Eo, day rb'}
         styles_dict = {'night': '--', 'day': ':'}
         ax.plot(df.TC, df.NEE, color = 'None', marker = 'o',
@@ -511,9 +518,9 @@ class partition(object):
         ax.tick_params(axis = 'x', labelsize = 14)
         ax.set_title(dt.datetime.strftime(date.to_pydatetime(), '%Y-%m-%d'),
                      fontsize = 18)
-        ax.set_xlabel('$PPFD\/(\mu mol\/photons\/m^{-2}\/s^{-1})$',
+        ax.set_xlabel(r'$PPFD\/(\mu mol\/photons\/m^{-2}\/s^{-1})$',
                       fontsize = 18)
-        ax.set_ylabel('$NEE\/(\mu molC\/m^{-2}\/s^{-1})$', fontsize = 18)
+        ax.set_ylabel(r'$NEE\/(\mu molC\/m^{-2}\/s^{-1})$', fontsize = 18)
         labels_dict = {'night': 'Night Eo and rb', 'day': 'Night Eo, day rb'}
         markers_dict = {'night': '+', 'day': 'x'}
         colors_dict = {'night': 'blue', 'day': 'magenta'}

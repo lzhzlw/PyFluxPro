@@ -1,0 +1,199 @@
+level = L2
+[Files]
+    file_path = Right click to browse
+    in_filename = Right click to browse (*.nc)
+    out_filename = Right click to browse (*.nc)
+    plot_path = Right click to browse
+[Options]
+    irga_type = Li-7500A
+    sonic_type = CSAT3
+    SONIC_Check = Yes
+    IRGA_Check = Yes
+[Variables]
+    [[AH]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 30
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Fa]]
+        [[[RangeCheck]]]
+            lower = -100
+            upper = 800
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Fg]]
+        [[[RangeCheck]]]
+            lower = -300
+            upper = 300
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Fld]]
+        [[[RangeCheck]]]
+            lower = 250
+            upper = 700
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Flu]]
+        [[[RangeCheck]]]
+            lower = 300
+            upper = 700
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Fn]]
+        [[[RangeCheck]]]
+            lower = -100
+            upper = 1000
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Fsd]]
+        [[[RangeCheck]]]
+            lower = -10
+            upper = 1500
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Fsu]]
+        [[[RangeCheck]]]
+            lower = -10
+            upper = 500
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[H2O]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 30
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Precip]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 50
+    [[RH]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 110
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[SH]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 0.05
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[SHD]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 0.05
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Sws]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 0.5
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Sws2]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 0.5
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Sws3]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 0.5
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Sws4]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 0.5
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Ta]]
+        [[[RangeCheck]]]
+            lower = -10
+            upper = 45
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Td]]
+        [[[RangeCheck]]]
+            lower = -10
+            upper = 45
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Ts]]
+        [[[RangeCheck]]]
+            lower = -10
+            upper = 50
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Ts2]]
+        [[[RangeCheck]]]
+            lower = -10
+            upper = 50
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Ts3]]
+        [[[RangeCheck]]]
+            lower = -10
+            upper = 50
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Ts4]]
+        [[[RangeCheck]]]
+            lower = -10
+            upper = 50
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[U]]
+        [[[RangeCheck]]]
+            lower = -20
+            upper = 20
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[V]]
+        [[[RangeCheck]]]
+            lower = -20
+            upper = 20
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[VP]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 5
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[VPD]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 5
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[Wd]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 360
+    [[Ws]]
+        [[[RangeCheck]]]
+            lower = 0
+            upper = 20
+        [[[DiurnalCheck]]]
+            numsd = 6
+    [[ps]]
+        [[[RangeCheck]]]
+            lower = 85
+            upper = 105
+        [[[DiurnalCheck]]]
+            numsd = 6
+[Plots]
+    [[Radiative fluxes]]
+        variables = Fsd,Fsu,Fld,Flu,Fn
+    [[Air temperature & humidity]]
+        variables = AH,H2O,RH,SH,Ta,Td
+    [[Wind speed, direction, pressure & precipitation]]
+        variables = U,V,Ws,Wd,ps,Precip
+    [[Soil moisture & rain]]
+        variables = Sws,Sws2,Sws3,Sws4,Precip
+    [[Soil heat flux & temperature]]
+        variables = Fg,Ts,Ts2,Ts3,Ts4

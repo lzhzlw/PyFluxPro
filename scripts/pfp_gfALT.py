@@ -1,10 +1,12 @@
 # standard modules
+import datetime
 import logging
 import os
 import traceback
 # 3rd party modules
 import dateutil
 import numpy
+import matplotlib.dates as mdt
 import matplotlib.pyplot as plt
 import pylab
 import scipy
@@ -235,12 +237,9 @@ def gfalternate_done(alt_gui):
     Author: PRI
     Date: August 2014
     """
-    # plot the summary statistics
-    #gfalternate_plotsummary(ds,alternate_info)
     # close any open plots
-    if len(plt.get_fignums()) != 0:
-        for i in plt.get_fignums():
-            plt.close(i)
+    for i in plt.get_fignums():
+        plt.close(i)
     # destroy the alternate GUI
     alt_gui.close()
     # write Excel spreadsheet with fit statistics
@@ -991,7 +990,7 @@ def gfalternate_plotcomposite(data_dict, stat_dict, diel_avg, l4a, pd):
     # save a hard copy of the plot
     sdt = data_dict["DateTime"]["data"][0].strftime("%Y%m%d")
     edt = data_dict["DateTime"]["data"][-1].strftime("%Y%m%d")
-    figname = l4a["info"]["site_name"].replace(" ", "") + "_Alternate_" + label_tower
+    figname = l4a["info"]["site_name"].replace(" ", "") + "_" + label_tower
     figname = figname + "_" + sdt + "_" + edt + '.png'
     figname = os.path.join(l4a["info"]["plot_path"], figname)
     fig.savefig(figname, format='png')
@@ -1072,6 +1071,99 @@ def gfalternate_plotcoveragelines(ds_tower, l4_info, called_by):
     else:
         plt.switch_backend(current_backend)
         plt.ion()
+    return
+
+def gfalternate_plotsummary(l4_info):
+    """
+    Purpose:
+     Plot a summary of fit statistics from the GapFillFromAlternate gap filling
+     routine at L4.
+    Author: PRI
+    Date: November 2023
+    """
+    for i in plt.get_fignums():
+        plt.close(i)
+    called_by = "GapFillFromAlternate"
+    l4ii = l4_info[called_by]["info"]
+    l4ig = l4_info[called_by]["gui"]
+    l4io = l4_info[called_by]["outputs"]
+    l4io_labels = list(l4io.keys())
+    site_name = l4ii["site_name"]
+    plot_path = l4ii["plot_path"]
+    labels = {"Radiation": {"Fsd": [], "Fsu": [], "Fld": [], "Flu": []},
+              "Meteorology": {"Ta": [], "AH": [], "ps": [], "Ws": []},
+              "Soil": {"Ts": [], "Fg": [], "Sws": [], "Fa": []}}
+    groups = list(labels.keys())
+    for group in groups:
+        for vlabel in list(labels[group].keys()):
+            labels[group][vlabel] = sorted([l for l in l4io_labels if l.split("_")[0]==vlabel])
+    results = ["r", "Bias", "RMSE", "Var ratio"]
+    ylabels = ["r", "Bias", "RMSE", "Var ratio"]
+    colours = ["blue","red","green","yellow","magenta","black","cyan","brown"]
+    markers = ["o", "P", "s", "*", "v", "X", "D", "^"]
+    MTLoc = mdt.AutoDateLocator(minticks=3, maxticks=5)
+    MTFmt = mdt.DateFormatter('%b')
+    dt_start = []
+    for ldt in l4io[l4io_labels[0]]["results"]["startdate"]:
+        dt_start.append(dateutil.parser.parse(ldt))
+    startdate = min(dt_start)
+    dt_end = []
+    for ldt in l4io[l4io_labels[0]]["results"]["enddate"]:
+        dt_end.append(dateutil.parser.parse(ldt))
+    enddate = max(dt_end)
+    for group in groups:
+        outputs = list(labels[group].keys())
+        # turn on interactive plotting
+        if l4ig["show_plots"]:
+            plt.ion()
+        else:
+            current_backend = plt.get_backend()
+            plt.switch_backend("agg")
+            plt.ioff()
+        fig, axs = plt.subplots(len(results), len(outputs), figsize=(13, 8))
+        fig.canvas.manager.set_window_title(group+": summary statistics")
+        title = site_name + ": " + group + "; "
+        title += datetime.datetime.strftime(startdate, "%Y-%m-%d")
+        title += " to " + datetime.datetime.strftime(enddate, "%Y-%m-%d")
+        fig.suptitle(title, fontsize=14, fontweight='bold')
+        for col, output in enumerate(outputs):
+            for row, rlabel, ylabel in zip(list(range(len(results))), results, ylabels):
+                for n, label in enumerate(labels[group][output]):
+                    x = []
+                    y = []
+                    for i in range(len(l4io[label]["results"]["startdate"])):
+                        sdt = dateutil.parser.parse(l4io[label]["results"]["startdate"][i])
+                        edt = dateutil.parser.parse(l4io[label]["results"]["enddate"][i])
+                        x.append(sdt+(edt-sdt)/2)
+                        y.append(l4io[label]["results"][rlabel][i])
+                    y = numpy.ma.masked_values(y, c.missing_value)
+                    axs[row, col].plot(x, y, color=colours[numpy.mod(n, 8)],
+                                       marker=markers[numpy.mod(n, 8)], label=label)
+                axs[row, col].legend(prop={'size':8})
+                axs[row, col].xaxis.set_major_locator(MTLoc)
+                if col == 0:
+                    axs[row, col].set_ylabel(ylabel, visible=True)
+                if row < len(results)-1:
+                    plt.setp(axs[row, col].get_xticklabels(), visible=False)
+                if row == 0:
+                    axs[row, col].set_title(output)
+                if row == len(results)-1:
+                    axs[row, col].xaxis.set_major_formatter(MTFmt)
+                    axs[row, col].set_xlabel('Month', visible=True)
+        fig.tight_layout()
+        plot_path = os.path.join(plot_path, "")
+        if not os.path.exists(plot_path): os.makedirs(plot_path)
+        figname = plot_path + site_name.replace(" ", "") + "_" + group + "_FitStatistics_"
+        figname += "_" + startdate.strftime("%Y%m%d") + "_" + enddate.strftime("%Y%m%d") + ".png"
+        fig.savefig(figname, format="png")
+        if l4ig["show_plots"]:
+            plt.draw()
+            pfp_utils.mypause(0.5)
+            plt.ioff()
+        else:
+            plt.close()
+            plt.switch_backend(current_backend)
+            plt.ion()
     return
 
 def gfalternate_quit(alt_gui):
@@ -1185,6 +1277,9 @@ def gfalternate_run(ds_tower, ds_alt, l4_info, called_by):
             l4a["run"]["enddate"] = enddate.strftime("%Y-%m-%d %H:%M")
         # fill long gaps with autocomplete
         gfalternate_autocomplete(ds_tower, ds_alt, l4_info, called_by)
+        if l4a["info"]["call_mode"] == "interactive":
+            # plot the summary statistics
+            gfalternate_plotsummary(l4_info)
         logger.info(" Finished auto (months) run ...")
     elif l4a["gui"]["period_option"] == 3:
         # automated run with window length in days
@@ -1206,6 +1301,9 @@ def gfalternate_run(ds_tower, ds_alt, l4_info, called_by):
             enddate = min([dateutil.parser.parse(l4a["info"]["enddate"]), enddate])
             l4a["run"]["enddate"] = enddate.strftime("%Y-%m-%d %H:%M")
         gfalternate_autocomplete(ds_tower, ds_alt, l4_info, called_by)
+        if l4a["info"]["call_mode"] == "interactive":
+            # plot the summary statistics
+            gfalternate_plotsummary(l4_info)
         logger.info(" Finished auto (days) run ...")
     else:
         logger.error("GapFillFromAlternate: unrecognised period option")

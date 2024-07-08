@@ -1,0 +1,94 @@
+level = L4
+[Files]
+    file_path = Right click to browse
+    in_filename = Right click to browse
+    out_filename = Right click to browse
+    plot_path = Right click to browse
+    climatology = Right click to browse
+[Options]
+    MaxGapInterpolate = 3
+[Drivers]
+    [[AH]]
+        [[[GapFillFromClimatology]]]
+            [[[[AH_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = AH,AH_cli
+    [[Fa]]
+        [[[GapFillFromClimatology]]]
+            [[[[Fa_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Fa,Fa_cli
+    [[Fg]]
+        [[[GapFillFromClimatology]]]
+            [[[[Fg_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Fg,Fg_cli
+    [[Fld]]
+        [[[GapFillFromClimatology]]]
+            [[[[Fld_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Fld,Fld_cli
+    [[Flu]]
+        [[[GapFillFromClimatology]]]
+            [[[[Flu_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Flu,Flu_cli
+    [[Fn]]
+        [[[GapFillFromClimatology]]]
+            [[[[Fn_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Fn,Fn_cli
+    [[Fsd]]
+        [[[GapFillFromClimatology]]]
+            [[[[Fsd_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Fsd,Fsd_cli
+    [[Fsu]]
+        [[[GapFillFromClimatology]]]
+            [[[[Fsu_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Fsu,Fsu_cli
+    [[ps]]
+        [[[GapFillFromClimatology]]]
+            [[[[ps_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = ps,ps_cli
+    [[Sws]]
+        [[[GapFillFromClimatology]]]
+            [[[[Sws_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Sws,Sws_cli
+    [[Ta]]
+        [[[GapFillFromClimatology]]]
+            [[[[Ta_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Ta,Ta_cli
+    [[Ts]]
+        [[[GapFillFromClimatology]]]
+            [[[[Ts_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Ts,Ts_cli
+    [[Ws]]
+        [[[GapFillFromClimatology]]]
+            [[[[Ws_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Ws,Ws_cli
+    [[Wd]]
+        [[[GapFillFromClimatology]]]
+            [[[[Wd_cli]]]]
+                method = interpolated daily
+        [[[MergeSeries]]]
+            source = Wd,Wd_cli

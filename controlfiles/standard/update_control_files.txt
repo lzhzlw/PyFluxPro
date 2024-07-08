@@ -75,7 +75,7 @@ xl_filename,xl_moddatetime"""
     L3 = """zms,UseL2Fluxes,CalculateFluxes,2DCoordRotation,MassmanCorrection,
 ApplyFco2Storage,ApplyFcStorage,CorrectIndividualFg,CorrectFgForStorage,
 KeepIntermediateSeries,CcUnits,CO2Units,Fco2Units,FcUnits,DisableFco2WPL,
-DisableFcWPL,DisableFeWPL,DisableWPL,ApplyWPL"""
+DisableFcWPL,DisableFeWPL,DisableWPL,ApplyWPL,UseFhvforFh"""
     concatenate = """NumberOfDimensions,MaxGapInterpolate,FixTimeStepMethod,
 Truncate,DoFingerprints,TruncateThreshold,SeriesToCheck,SeriesToKeep"""
     cpd_barr = Fsd_threshold,Num_bootstraps
@@ -213,6 +213,7 @@ Ta,Ts,ustar,U_,V_,VP,VPD,W_,Wd,Ws"""
         K2 = K^2
         K.g/m^3 = K.g/m^3
         kg/kg = kg/kg
+        kg/m^2/s = kg/m^2/s
         kg/m/s2 = kg/m/s^2
         kg/m3 = kg/m^3
         kPa = kPa

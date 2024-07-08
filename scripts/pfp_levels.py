@@ -95,12 +95,10 @@ def l3qc(cf, ds2):
     ds3 = copy.deepcopy(ds2)
     # set some attributes for this level
     pfp_utils.UpdateGlobalAttributes(cf, ds3, "L3")
-    # check to see if we have any imports
-    #pfp_gf.ImportSeries(cf,ds3)
-    # apply linear corrections to the data
-    pfp_ck.do_linear(cf,ds3)
     # parse the control file for information on how the user wants to do the gap filling
     l3_info = pfp_compliance.ParseL3ControlFile(cf, ds3)
+    # check to see if we have any imports
+    pfp_gf.ImportSeries(ds3, l3_info)
     # ************************
     # *** Merge humidities ***
     # ************************
@@ -166,8 +164,11 @@ def l3qc(cf, ds2):
     # *************************
     # *** Radiation section ***
     # *************************
-    # merge the incoming shortwave radiation
+    # merge the radiation components
     pfp_ts.CombineSeries(cf, ds3, l3_info["CombineSeries"]["Fsd"])
+    pfp_ts.CombineSeries(cf, ds3, l3_info["CombineSeries"]["Fsu"])
+    pfp_ts.CombineSeries(cf, ds3, l3_info["CombineSeries"]["Fld"])
+    pfp_ts.CombineSeries(cf, ds3, l3_info["CombineSeries"]["Flu"])
     # calculate the net radiation from the Kipp and Zonen CNR1
     pfp_ts.CalculateNetRadiation(cf, ds3)
     pfp_ts.CombineSeries(cf, ds3, l3_info["CombineSeries"]["Fn"])
@@ -197,8 +198,12 @@ def l3qc(cf, ds2):
     pfp_ts.CalculateAvailableEnergy(ds3)
     # create additional variables using MergeSeries or AverageSeries
     pfp_ts.CombineSeries(cf, ds3, l3_info["CombineSeries"]["extras"])
+    # calculate ET from Fe
+    pfp_ts.CalculateET(ds3, l3_info)
     # Calculate Monin-Obukhov length
     pfp_ts.CalculateMoninObukhovLength(ds3)
+    # apply linear corrections to the data
+    pfp_ck.do_linear(cf, ds3)
     # re-apply the quality control checks (range, diurnal and rules)
     pfp_ck.do_qcchecks(cf, ds3)
     # check missing data and QC flags are consistent
@@ -225,12 +230,10 @@ def l4qc(main_gui, cf, ds3):
     l4_info = pfp_gf.ParseL4ControlFile(cf, ds4)
     # check to see if we have any imports
     pfp_gf.ImportSeries(ds4, l4_info)
-    # re-apply the quality control checks (range, diurnal and rules)
-    #pfp_ck.do_qcchecks(cf, ds4)
     # now do the meteorological driver gap filling
     # *** start of the section that does the gap filling of the drivers ***
     # fill short gaps using interpolation
-    pfp_gf.GapFillUsingInterpolation(cf, ds4)
+    pfp_gf.GapFillUsingInterpolation(ds4, l4_info)
     # gap fill using climatology
     if "GapFillFromClimatology" in l4_info:
         pfp_gf.GapFillFromClimatology(ds4, l4_info, "GapFillFromClimatology")
@@ -291,7 +294,7 @@ def l5qc(main_gui, cf, ds4):
     if ds5.info["returncodes"]["value"] != 0:
         return ds5
     # fill short gaps using interpolation
-    pfp_gf.GapFillUsingInterpolation(cf, ds5)
+    pfp_gf.GapFillUsingInterpolation(ds5, l5_info)
     # gap fill using marginal distribution sampling
     if "GapFillUsingMDS" in l5_info:
         pfp_gfMDS.GapFillUsingMDS(ds5, l5_info, "GapFillUsingMDS")
@@ -378,7 +381,7 @@ def l6qc(main_gui, cf, ds5):
     # calculate NEP from NEE
     pfp_rp.CalculateNEP(ds6, l6_info)
     # calculate ET from Fe
-    pfp_rp.CalculateET(ds6)
+    pfp_ts.CalculateET(ds6, l6_info)
     # partition NEE into GPP and ER
     pfp_rp.PartitionNEE(ds6, l6_info)
     # write the percentage of good data as a variable attribute

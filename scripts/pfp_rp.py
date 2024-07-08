@@ -22,31 +22,6 @@ from scripts import pfp_utils
 
 logger = logging.getLogger("pfp_log")
 
-def CalculateET(ds):
-    """
-    Purpose:
-     Calculate ET from Fe
-    Usage:
-     pfp_rp.CalculateET(ds)
-      where ds is a data structure
-    Side effects:
-     Series to hold the ET data are created in ds.
-    Author: PRI
-    Date: June 2015
-    """
-    nrecs = int(float(ds.root["Attributes"]["nc_nrecs"]))
-    series_list = list(ds.root["Variables"].keys())
-    Fe_list = [item for item in series_list if "Fe" in item[0:2]]
-    for label in Fe_list:
-        Fe = pfp_utils.GetVariable(ds, label)
-        ET = pfp_utils.CreateEmptyVariable(label.replace("Fe","ET"), nrecs)
-        ET["Data"] = Fe["Data"]/c.Lv
-        ET["Attr"]["long_name"] = "Evapo-transpiration"
-        ET["Attr"]["standard_name"] = "water_evapotranspiration_flux"
-        ET["Attr"]["units"] = "kg/m^2/s"
-        pfp_utils.CreateVariable(ds, ET)
-    return
-
 def CalculateNEE(ds, l6_info):
     """
     Purpose:
@@ -80,16 +55,12 @@ def CalculateNEE(ds, l6_info):
         output_label = l6_info["NetEcosystemExchange"][label]["output"]
         if Fco2_label not in labels:
             msg = " ***** " + Fco2_label + " not found in data structure"
-            logger.warning("*****")
             logger.warning(msg)
-            logger.warning("*****")
             ds.root["Variables"].pop(output_label)
             continue
         if ER_label not in labels:
             msg = " ***** " + ER_label + " not found in data structure"
-            logger.warning("*****")
             logger.warning(msg)
-            logger.warning("*****")
             ds.root["Variables"].pop(output_label)
             continue
         Fco2 = pfp_utils.GetVariable(ds, Fco2_label)
@@ -133,9 +104,7 @@ def CalculateNEP(ds, l6_info):
     for nee_name in list(l6_info["NetEcosystemExchange"].keys()):
         if nee_name not in labels:
             msg = "***** " + nee_name + " not found in data structure"
-            logger.warning("*****")
             logger.warning(msg)
-            logger.warning("*****")
             continue
         nep_name = nee_name.replace("NEE", "NEP")
         NEE = pfp_utils.GetVariable(ds, nee_name)
@@ -289,6 +258,9 @@ def EcoResp(ds, l6_info, called_by, xl_writer):
         # Pass the dataframe to the respiration class and get the results
         ptc = pfp_part.partition(df, xl_writer, l6_info)
         params_df = ptc.estimate_parameters(mode = er_mode)
+        # return if no fit parameters found
+        if params_df is None:
+            return
         ER["Data"] = numpy.ma.array(ptc.estimate_er_time_series(params_df), copy=True)
         ER["Flag"] = numpy.tile(30, len(ER["Data"]))
         # Write ER to data structure
@@ -312,6 +284,7 @@ def EcoResp(ds, l6_info, called_by, xl_writer):
                          startdate=str(startdate),
                          enddate=str(enddate))
         rp_plot(pd, ds, output, drivers, target, iel, called_by)
+        return
 
 def ERUsingSOLO(main_gui, ds, l6_info, called_by):
     """
@@ -486,43 +459,43 @@ def L6_summary(ds, l6_info):
     pfp_io.nc_write_globalattributes(nc_annual, ds, flag_defs=False)
     pfp_io.nc_write_group(nc_annual, ds_summary, "Annual")
     nc_annual.close()
-    ## cumulative totals
-    #ts = int(float(ds.root["Attributes"]["time_step"]))
-    #dt = pfp_utils.GetVariable(ds, "DateTime")
-    #cdt = dt["Data"] - datetime.timedelta(minutes=ts)
-    #years = sorted(list(set([ldt.year for ldt in cdt])))
-    ## loop over individual years
-    #for year in years:
-        #dss = L6_summary_cumulative(ds, series_dict, year=year)
-        #setattr(ds_summary, "Cumulative_"+str(year), dss.Cumulative)
-        #nc_group = nc_summary.createGroup("Cumulative_"+str(year))
-        #pfp_io.nc_write_group(nc_group, ds_summary, "Cumulative_"+str(year))
-        #nrecs = len(dss.Cumulative["Variables"]["DateTime"]["Data"])
-        #if nrecs < 65530:
-            #sheet = "Cumulative(" + str(year) + ")"
-            #group = "Cumulative_" + str(year)
-            #L6_summary_write_xlfile(xl_file, sheet, ds_summary, group=group)
-        #else:
-            #msg = "L6 cumulative: too many rows for .xls workbook, skipping "+year
-            #logger.warning(msg)
-    ## all years
-    #dss = L6_summary_cumulative(ds, series_dict, year="all")
-    #setattr(ds_summary, "Cumulative_all", dss.Cumulative)
-    #nc_group = nc_summary.createGroup("Cumulative_all")
-    #pfp_io.nc_write_group(nc_group, ds_summary, "Cumulative_all")
+    # cumulative totals
+    ts = int(float(ds.root["Attributes"]["time_step"]))
+    dt = pfp_utils.GetVariable(ds, "DateTime")
+    cdt = dt["Data"] - datetime.timedelta(minutes=ts)
+    years = sorted(list(set([ldt.year for ldt in cdt])))
+    # loop over individual years
+    for year in years:
+        dss = L6_summary_cumulative(ds, series_dict, year=year)
+        setattr(ds_summary, "Cumulative_"+str(year), dss.Cumulative)
+        nc_group = nc_summary.createGroup("Cumulative_"+str(year))
+        pfp_io.nc_write_group(nc_group, ds_summary, "Cumulative_"+str(year))
+        nrecs = len(dss.Cumulative["Variables"]["DateTime"]["Data"])
+        if nrecs < 65530:
+            sheet = "Cumulative(" + str(year) + ")"
+            group = "Cumulative_" + str(year)
+            L6_summary_write_xlfile(xl_file, sheet, ds_summary, group=group)
+        else:
+            msg = "L6 cumulative: too many rows for .xls workbook, skipping "+year
+            logger.warning(msg)
+    # all years
+    dss = L6_summary_cumulative(ds, series_dict, year="all")
+    setattr(ds_summary, "Cumulative_all", dss.Cumulative)
+    nc_group = nc_summary.createGroup("Cumulative_all")
+    pfp_io.nc_write_group(nc_group, ds_summary, "Cumulative_all")
     # close the summary netCDF file
     nc_summary.close()
-    ## separate cumulative file
-    #nc_cumulative = pfp_io.nc_open_write(out_name.replace(".nc", "_Cumulative.nc"))
-    #pfp_io.nc_write_globalattributes(nc_cumulative, ds, flag_defs=False)
-    #pfp_io.nc_write_group(nc_cumulative, ds_summary, "Cumulative_all")
-    #nc_cumulative.close()
+    # separate cumulative file
+    nc_cumulative = pfp_io.nc_open_write(out_name.replace(".nc", "_Cumulative.nc"))
+    pfp_io.nc_write_globalattributes(nc_cumulative, ds, flag_defs=False)
+    pfp_io.nc_write_group(nc_cumulative, ds_summary, "Cumulative_all")
+    nc_cumulative.close()
     # close the Excel workbook
     xl_file.save(xl_name)
     # plot the daily averages and sums
     L6_summary_plotdaily(ds_summary, l6_info)
-    ## plot the cumulative sums
-    #L6_summary_plotcumulative(ds_summary, l6_info)
+    # plot the cumulative sums
+    L6_summary_plotcumulative(ds_summary, l6_info)
     return
 
 def L6_summary_plotdaily(ds_summary, l6_info):
@@ -602,8 +575,9 @@ def L6_summary_plotdaily(ds_summary, l6_info):
             plt.plot(ddv["DateTime"]["Data"], ddv[label]["Data"], line, alpha=0.3)
             plt.plot(ddv["DateTime"]["Data"], pfp_ts.smooth(ddv[label]["Data"], window_len=30),
                      line, linewidth=2, label=label+" (30 day filter)")
+            ylabel = ddv[label]["Attr"]["units"]
     plt.xlabel("Date")
-    plt.ylabel(ddv["Fn"]["Attr"]["units"])
+    plt.ylabel(ylabel)
     plt.legend(loc='upper left',prop={'size':8})
     plt.tight_layout()
     sdt = ddv["DateTime"]["Data"][0].strftime("%Y%m%d")
@@ -707,14 +681,19 @@ def L6_summary_plotcumulative(ds_summary, l6_info):
             cdyt = cdyv["DateTime"]["Data"]
             year = cdyt[0].year
             cyf = [pfp_utils.get_yearfractionfromdatetime(dt) - int(year) for dt in cdyt]
-            plt.plot(cyf, cdyv["ET"]["Data"],color=color_list[numpy.mod(n,8)],
-                     label=str(year))
-            plt.plot(cyf, cdyv["Precip"]["Data"],color=color_list[numpy.mod(n,8)],
-                     linestyle='--')
+            if "ET" in cdyv:
+                plt.plot(cyf, cdyv["ET"]["Data"], color=color_list[numpy.mod(n, 8)],
+                         label=str(year))
+                ylabel = cdyv["ET"]["Attr"]["units"]
+            if "Precip" in cdyv:
+                plt.plot(cyf, cdyv["Precip"]["Data"], color=color_list[numpy.mod(n, 8)],
+                         linestyle='--')
+                if "ET" not in cdyv:
+                    ylabel = cdyv["Precip"]["Attr"]["units"]
         plt.xlim([0, 1])
         pylab.xticks(xlabel_posn, xlabels)
         plt.xlabel("Month")
-        plt.ylabel(cdyv["ET"]["Attr"]["units"])
+        plt.ylabel(ylabel)
         plt.legend(loc='upper left',prop={'size':8})
         plt.tight_layout(rect=[0, 0, 1, 0.98])
         # save a hard copy of the plot
@@ -748,43 +727,32 @@ def L6_summary_createseriesdict(ds, l6_info):
     Author: PRI
     Date: June 2015
     """
-    l6is = l6_info["Summary"]
     # create a dictionary to hold the data being summarised
     series_dict = {"daily":{},"annual":{},"cumulative":{},"lists":{}}
     sdl = series_dict["lists"]
+    dsv = ds.root["Variables"]
     labels = list(ds.root["Variables"].keys())
-    sdl["nee"] = [item for item in l6is["NetEcosystemExchange"]
-                  if "NEE" in item[0:3] and item in labels]
-    sdl["gpp"] = [item for item in l6is["GrossPrimaryProductivity"]
-                  if "GPP" in item[0:3] and item in labels]
-    sdl["er"] = [item for item in l6is["EcosystemRespiration"]
-                  if "ER" in item[0:2] and item in labels]
+    sdl["nee"] = [l for l in labels if l[0:3]=="NEE" and dsv[l]["Attr"]["units"]=="umol/m^2/s"]
+    sdl["gpp"] = [l for l in labels if l[0:3]=="GPP" and dsv[l]["Attr"]["units"]=="umol/m^2/s"]
+    sdl["er"] = [l for l in labels if l[0:2]=="ER" and dsv[l]["Attr"]["units"]=="umol/m^2/s"]
     sdl["nep"] = [item.replace("NEE","NEP") for item in sdl["nee"]]
     sdl["nep"] = [item for item in sdl["nep"] if item in labels]
     sdl["co2"] = sdl["nee"]+sdl["nep"]+sdl["gpp"]+sdl["er"]
-    # remove any variables that have gaps
+    # set up the daily and cumulative dictionaries
     for label in list(sdl["co2"]):
-        var = pfp_utils.GetVariable(ds, label)
-        if numpy.ma.count_masked(var["Data"]) != 0:
-            sdl["co2"].remove(label)
-        else:
-            series_dict["daily"][label] = {}
-            series_dict["cumulative"][label] = {}
-            series_dict["daily"][label]["operator"] = "sum"
-            series_dict["daily"][label]["format"] = "0.00"
-            series_dict["cumulative"][label]["operator"] = "sum"
-            series_dict["cumulative"][label]["format"] = "0.00"
-    sdl["ET"] = [item for item in labels if "ET" in item[0:2]]
-    sdl["Precip"] = [item for item in labels if "Precip" in item[0:6]]
+        series_dict["daily"][label] = {}
+        series_dict["cumulative"][label] = {}
+        series_dict["daily"][label]["operator"] = "sum"
+        series_dict["daily"][label]["format"] = "0.00"
+        series_dict["cumulative"][label]["operator"] = "sum"
+        series_dict["cumulative"][label]["format"] = "0.00"
+    sdl["ET"] = [l for l in labels if l[0:2]=="ET" and dsv[l]["Attr"]["units"]=="kg/m^2/s"]
+    sdl["Precip"] = [l for l in labels if l[0:6]=="Precip" and dsv[l]["Attr"]["units"]=="mm"]
     sdl["h2o"] = sdl["ET"]+sdl["Precip"]
-    # remove any variables that have gaps
+    # set up the daily and cumulative dictionaries
     for label in list(sdl["h2o"]):
-        var = pfp_utils.GetVariable(ds, label)
-        if numpy.ma.count_masked(var["Data"]) != 0:
-            sdl["h2o"].remove(label)
-        else:
-            series_dict["daily"][label] = {"operator":"sum","format":"0.00"}
-            series_dict["cumulative"][label] = {"operator":"sum","format":"0.00"}
+        series_dict["daily"][label] = {"operator":"sum","format":"0.00"}
+        series_dict["cumulative"][label] = {"operator":"sum","format":"0.00"}
     if "AH" in labels:
         series_dict["daily"]["AH"] = {"operator":"average","format":"0.00"}
     if "CO2" in labels:
@@ -1319,6 +1287,8 @@ def ParseL6ControlFile(cfg, ds):
         l6_info["GrossPrimaryProductivity"] = {}
         for output in list(cfg["GrossPrimaryProductivity"].keys()):
             rpGPP_createdict(cfg, ds, l6_info["GrossPrimaryProductivity"], output)
+    if "EvapoTranspiration" in list(cfg.keys()):
+        l6_info["EvapoTranspiration"] = copy.deepcopy(cfg["EvapoTranspiration"])
     return l6_info
 
 def PartitionNEE(ds, l6_info):
@@ -1351,16 +1321,12 @@ def PartitionNEE(ds, l6_info):
         output_label = l6_info["GrossPrimaryProductivity"][label]["output"]
         if ER_label not in labels:
             msg = "***** " + ER_label + " not found in data structure"
-            logger.warning("*****")
             logger.warning(msg)
-            logger.warning("*****")
             ds.root["Variables"].pop(output_label)
             continue
         if NEE_label not in labels:
             msg = "***** " + NEE_label + " not found in data structure"
-            logger.warning("*****")
             logger.warning(msg)
-            logger.warning("*****")
             ds.root["Variables"].pop(output_label)
             continue
         NEE = pfp_utils.GetVariable(ds, NEE_label)

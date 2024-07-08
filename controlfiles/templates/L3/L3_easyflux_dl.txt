@@ -5,15 +5,15 @@ level = L3
     out_filename = Right click to browse (*.nc)
     plot_path = Right click to browse
 [Options]
-    UseL2Fluxes = Yes
-    zms = ""
+    zms = 
     CO2Units = umol/mol
     Fco2Units = umol/m^2/s
+    CalculateFluxes = No
 [Soil]
-    FgDepth = ""
-    BulkDensity = ""
-    OrganicContent = ""
-    SwsDefault = ""
+    FgDepth = 
+    BulkDensity = 
+    OrganicContent = 
+    SwsDefault = 
     SwsSeries = Sws
 [Variables]
     [[CO2]]
