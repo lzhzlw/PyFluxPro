@@ -1,11 +1,12 @@
+level = L1
 [Files]
     existing_era5_base_path = /home/cilli/OzFlux/TestSites/
     new_era5_base_path = /nfs/mesodata/OzFlux/Sites/ERA5/AUS/
     #new_era5_base_path = /run/media/cilli/ozflux2/OzFlux2/OzFlux_rdsi/erai_processing/ERA5/AUS/
     xl_sheet_name = ERA5
     site_master_file_path = /home/cilli/OzFlux/TestSites/site_master_era5.xls
-    from_cleaned = False # True: read earlier ERA5 data from cleaned dir; False: reads existing *_ERA5.nc file
-    from_file = True   #False #  # True: defines to read all era5 files; False: reads from data.pickle
+    from_cleaned = False    # True: read earlier ERA5 data from cleaned dir; False: reads existing *_ERA5.nc file
+    from_file = True    #False #  # True: defines to read all era5 files; False: reads from data.pickle
 [Options]
     move_to_processed = no
     concatenate_with_existing = no

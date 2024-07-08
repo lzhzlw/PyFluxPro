@@ -1,0 +1,172 @@
+level = L1
+[Files]
+    existing_era5_base_path = C:/ProgramFilesLiu/mySites/
+    new_era5_base_path = E:/temporary/lzh/FY/data/fluxdata/ERA5/TP/
+    #new_era5_base_path = /run/media/cilli/ozflux2/OzFlux2/OzFlux_rdsi/erai_processing/ERA5/AUS/
+    xl_sheet_name = ERA5
+    site_master_file_path = E:/temporary/lzh/FY/data/fluxdata/ERA5/site_master_era5.xls
+    from_cleaned = False    # True: read earlier ERA5 data from cleaned dir; False: reads existing *_ERA5.nc file
+    from_file = True    #False #  # True: defines to read all era5 files; False: reads from data.pickle
+[Options]
+    move_to_processed = no
+    concatenate_with_existing = no
+[Variables]
+    [[AH]]
+        [[[Attr]]]
+            standard_name = mass_concentration_of_water_vapor_in_air
+            long_name = Absolute humidity
+            units = g/m^3
+            statistic_type = average
+    [[Fa]]
+        [[[Attr]]]
+            long_name = Available energy
+            units = W/m^2
+            statistic_type = average
+    [[Fe]]
+        [[[Attr]]]
+            long_name = Latent heat flux
+            standard_name = surface_upward_latent_heat_flux
+            statistic_type = average
+            units = W/m^2
+    [[Fg]]
+        [[[Attr]]]
+            standard_name = downward_heat_flux_in_soil
+            long_name = Ground heat flux
+            units = W/m^2
+            statistic_type = average
+    [[Fh]]
+        [[[Attr]]]
+            long_name = Sensible heat flux
+            standard_name = surface_upward_sensible_heat_flux
+            statistic_type = average
+            units = W/m^2
+    [[Flu]]
+        [[[Attr]]]
+            standard_name = surface_upwelling_longwave_flux_in_air
+            long_name = Up-welling shortwave radiation
+            units = W/m^2
+            statistic_type = average
+    [[Fn]]
+        [[[Attr]]]
+            standard_name = surface_net_downwawrd_radiative_flux
+            long_name = Net radiation
+            units = W/m^2
+            statistic_type = average
+    [[Fnlw]]
+        [[[nc]]]
+            name = str
+        [[[Attr]]]
+            long_name = Net longwave radiation
+            statistic_type = average
+            units = W/m^2
+    [[Fnsw]]
+        [[[nc]]]
+            name = ssr
+        [[[Attr]]]
+            long_name = Net shortwave radiation
+            statistic_type = average
+            units = W/m^2
+    [[Fsd]]
+        [[[nc]]]
+            name = ssrd
+        [[[Attr]]]
+            long_name = Down-welling shortwave radiation
+            standard_name = surface_downwelling_shortwave_flux_in_air
+            statistic_type = average
+            units = W/m^2
+    [[Fsu]]
+        [[[Attr]]]
+            standard_name = surface_upwelling_shortwave_flux_in_air
+            long_name = Up-welling shortwave radiation
+            units = W/m^2
+            statistic_type = average
+    [[Habl]]
+        [[[Attr]]]
+            long_name = Atmospheric boundary layer height
+            units = m
+            statistic_type = average
+    [[ps]]
+        [[[Attr]]]
+            long_name = Surface air pressure
+            standard_name = surface_air_pressure
+            statistic_type = average
+            units = Pa
+    [[RH]]
+        [[[Attr]]]
+            long_name = Relative humidity
+            standard_name = relative_humidity
+            statistic_type = average
+            units = percent
+    [[SH]]
+        [[[Attr]]]
+            long_name = Specific humidity
+            standard_name = specific_humidity
+            statistic_type = average
+            units = kg/kg
+    [[Ta]]
+        [[[nc]]]
+            name = t2m
+        [[[Attr]]]
+            long_name = Air temperature
+            standard_name = air_temperature
+            statistic_type = average
+            units = K
+    [[Td]]
+        [[[nc]]]
+            name = d2m
+        [[[Attr]]]
+            long_name = Dewpoint temperature
+            standard_name = dewpoint_temperature
+            statistic_type = average
+            units = K
+    [[Ts]]
+        [[[nc]]]
+            name = stl1
+        [[[Attr]]]
+            long_name = Soil temperature at level 1, 0 to 7 cm
+            standard_name = soil_temperature
+            statistic_type = average
+            units = K
+   [[Sws]]
+        [[[nc]]]
+            name = swvl1
+        [[[Attr]]]
+            long_name = Soil water content at level 1, 0 to 7 cm
+            standard_name = soil_moisture_content
+            statistic_type = average
+            units = m^3/m^3
+    [[U]]
+        [[[nc]]]
+            name = u10
+        [[[Attr]]]
+            long_name = Wind component, positive eastward
+            standard_name = eastward_wind
+            statistic_type = average
+            units = m/s
+    [[V]]
+        [[[nc]]]
+            name = v10
+        [[[Attr]]]
+            long_name = Wind component, positive northward
+            standard_name = northward_wind
+            statistic_type = average
+            units = m/s
+    [[Wd]]
+        [[[Attr]]]
+            long_name = Wind direction
+            standard_name = wind_from_direction
+            statistic_type = average
+            units = degrees
+    [[Ws]]
+        [[[Attr]]]
+            long_name = Wind speed
+            standard_name = wind_speed
+            statistic_type = average
+            units = m/s
+    [[LAI]]
+        [[[nc]]]
+            name = lai_lv
+        [[[Attr]]]
+            long_name = Leaf area index of low vegetation
+            statistic_type = average
+            units = m^2/m^2

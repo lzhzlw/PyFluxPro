@@ -196,3 +196,4 @@ level = L2
         variables = ps,Ws_SONIC_Av,U_SONIC_Av,V_SONIC_Av,W_SONIC_Av,Wd_SONIC_Av,Precip
     [[CO2 flux diagnostics]]
         variables = Fco2,H2O_IRGA_Av,H2O_IRGA_Vr,CO2_IRGA_Av,CO2_IRGA_Vr,Precip
+[Options]

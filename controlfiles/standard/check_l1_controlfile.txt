@@ -1,11 +1,12 @@
+level = l1
 [Files]
     required = file_path,in_filename,in_firstdatarow,in_headerrow,out_filename
 [Global]
     [[Required]]
-        latitude =
-        longitude =
-        site_name =
-        time_step =
+        latitude = 
+        longitude = 
+        site_name = 
+        time_step = 
     [[Forced]]
         Conventions = CF-1.8
         data_link = http://data.ozflux.org.au/
@@ -15,29 +16,29 @@
         publisher_name = TERN Ecosystem Processes,OzFlux
         ozflux_link = http://ozflux.org.au/
     [[Recommended]]
-        acknowledgement =
-        canopy_height =
-        comment =
-        contact =
-        fluxnet_id =
-        history =
-        institution =
-        metadata_link =
-        references =
-        site_pi =
-        soil =
-        source =
-        title =
-        tower_height =
-        vegetation =
+        acknowledgement = 
+        canopy_height = 
+        comment = 
+        contact = 
+        fluxnet_id = 
+        history = 
+        institution = 
+        metadata_link = 
+        references = 
+        site_pi = 
+        soil = 
+        source = 
+        title = 
+        tower_height = 
+        vegetation = 
     [[Deprecated]]
         end_date = time_coverage_end
         nc_level = processing_level
         nc_rundatetime = date_created
         start_date = time_coverage_start
-        xl_datemode =
-        xl_filename =
-        xl_moddatetime =
+        xl_datemode = 
+        xl_filename = 
+        xl_moddatetime = 
 [Variables]
     [[AGC]]
         [[[average]]]

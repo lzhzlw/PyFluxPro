@@ -1,0 +1,18 @@
+[NetCDFConcatenate]
+    OK = True
+    in_file_names = C:/ProgramFilesLiu/PyFluxPro/external_mysite/existing_era5/Arou_30min\Data\ERA5\processed\Arou_30min_ERA5_201501010800_201601010700.nc,
+    out_file_name = C:/ProgramFilesLiu/PyFluxPro/external_mysite/existing_era5/Arou_30min\Data\ERA5\Arou_30min_ERA5.nc
+    NumberOfDimensions = 3
+    MaxGapInterpolate = 0
+    FixTimeStepMethod = round
+    Truncate = No
+    TruncateThreshold = 50
+    SeriesToCheck = all,
+    time_coverage_start = 2015-01-01 08:00:00,
+    time_coverage_end = 2016-01-01 07:00:00,
+    chrono_files = C:/ProgramFilesLiu/PyFluxPro/external_mysite/existing_era5/Arou_30min\Data\ERA5\processed\Arou_30min_ERA5_201501010800_201601010700.nc,
+    labels = Fsd, Fsu, Fh, Habl, RH, V, Td, Ta, Ts, U, Fe, Ws, Wd, ps
+    attributes = long_name, standard_name, statistic_type, units
+[RemoveIntermediateSeries]
+    KeepIntermediateSeries = No
+    not_output = ,

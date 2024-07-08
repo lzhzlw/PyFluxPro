@@ -481,3 +481,8 @@ def virtualtheta(theta_in, mr):
     #  Tvp - virtual potential temperature, K
     Tvp = theta_in * (1 + (0.61 * mr))
     return Tvp
+
+def vpd_from_ta_rh(Ta, RH):
+    Ta, dummy = pfp_utils.SeriestoMA(Ta)
+    VPD = VPsat(Ta) * (1 - RH * 0.01) * 10
+    return VPD
